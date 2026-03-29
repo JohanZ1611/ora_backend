@@ -28,7 +28,7 @@ export const sendReminderEmail = async (params: {
   }[params.reminderType];
 
   await resend.emails.send({
-    from: "Ora <recordatorios@tudominio.com>",
+    from: "Ora <onboarding@resend.dev>",
     to: params.to,
     subject: `🔔 Recordatorio de ${typeLabel}: ${params.itemName}`,
     html: `
