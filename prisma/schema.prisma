@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,4 +5,119 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum Frequency {
+  ONCE
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model User {
+  id           String        @id @default(uuid())
+  supabaseId   String        @unique
+  email        String        @unique
+  name         String?
+  avatarUrl    String?
+  currency     String        @default("COP")
+  themeConfig  Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  groups       Group[]
+  budgets      Budget[]
+  goals        Goal[]
+  debts        Debt[]
+  todos        Todo[]
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  userId      String
+  groupId     String?
+  type        TransactionType
+  frequency   Frequency       @default(ONCE)
+  amount      Float
+  category    String
+  description String?
+  date        DateTime
+  dueDate     DateTime?
+  reminderOn  Boolean         @default(false)
+  receiptUrl  String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group       Group?          @relation(fields: [groupId], references: [id], onDelete: SetNull)
+}
+
+model Group {
+  id           String          @id @default(uuid())
+  userId       String
+  name         String
+  type         TransactionType
+  category     String
+  dueDate      DateTime?
+  reminderOn   Boolean         @default(false)
+  description  String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+}
+
+model Budget {
+  id          String   @id @default(uuid())
+  userId      String
+  category    String
+  limitAmount Float
+  month       Int
+  year        Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, month, year])
+}
+
+model Goal {
+  id           String    @id @default(uuid())
+  userId       String
+  name         String
+  targetAmount Float
+  savedAmount  Float     @default(0)
+  deadline     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Debt {
+  id          String    @id @default(uuid())
+  userId      String
+  name        String
+  totalAmount Float
+  paidAmount  Float     @default(0)
+  dueDate     DateTime?
+  reminderOn  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Todo {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  date      DateTime
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
